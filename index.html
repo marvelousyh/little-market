@@ -15,6 +15,11 @@
 canvas.food-picture{width:82px;height:82px;flex-shrink:0;filter:drop-shadow(0 3px 3px #a2886822)}canvas.food-icon{width:54px;height:54px;flex:0 0 54px}@media(max-width:600px){canvas.food-picture{width:68px;height:68px}}
 
 #start-dialog{width:min(660px,94vw);max-height:94dvh;padding:0;background:#fff9ed;color:#66513e}#start-dialog::backdrop{background:#e5d6b9} .save-menu{padding:clamp(22px,5vw,42px)}.save-menu h1{font:700 clamp(32px,6vw,48px)/1.08 Georgia,serif;margin:14px 0;color:#58745a}.save-menu>p{line-height:1.5}.save-menu h2{font:700 22px Georgia,serif;margin:26px 0 4px}#saved-games{display:grid;gap:12px;margin:14px 0 22px}.save-card{display:grid;grid-template-columns:105px 1fr;align-items:center;background:#f1ead9;border:1px solid #ddcfb4;border-radius:20px;padding:12px}.save-card canvas{width:100px;height:112px}.save-card h3{font-size:22px;margin:0}.save-card p{margin:6px 0 12px;line-height:1.6}.save-card .primary{padding:9px 16px}.delete-save{margin-left:12px;color:#956558}.empty-save{border:1px dashed #d4c4a8;border-radius:16px;padding:18px;color:#8b7c65}.save-menu .muted{font-size:12px}#save-menu-message{color:#9b5138;font-weight:600}#save-menu-message:empty{display:none}.delete-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}#confirm-delete-save{background:#a55d4f}#games-menu-btn{font-size:12px}#back-to-games{margin-bottom:12px}
+</style><style>.mission-line,#rush-hud,#run-message,#rush-banner{display:none!important}</style><style>
+#food-reward{position:fixed;top:80px;right:20px;z-index:80;pointer-events:none;color:#fff4c8;background:#214d40ed;border:1px solid #f4cd73;padding:10px 16px;border-radius:12px;font:bold 15px Arial;opacity:0;box-shadow:0 6px 20px #12271c30}
+.reward-show{animation:foodReward 2.3s ease-out forwards}@keyframes foodReward{0%{opacity:0;transform:translateY(8px)}12%,75%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-8px)}}
+#question-panel{box-shadow:0 8px 24px #142c2930!important;background:#fffaf0f2!important;border-color:#b69a69!important}
+@media(max-width:600px){#food-reward{top:68px;right:8px;font-size:12px;padding:8px}}
 </style></head>
 <body><main id="app">
 <dialog id="start-dialog" aria-labelledby="start-title"><div class="save-menu"><span class="eyebrow">LITTLE MARKET · PET ADVENTURES</span><h1 id="start-title">A little run.<br>A friend for life.</h1><p>Adopt a pet, learn about food, and grow together.</p><button class="primary" id="new-saved-game">＋ Start new game</button><h2>Continue your adventure</h2><p id="save-count"></p><p id="save-menu-message" role="status" aria-live="polite"></p><div id="saved-games"></div><p class="muted">Up to 3 games, saved automatically in this browser on this device. Clearing browser data removes saves. Download a backup from Help to keep them safe.</p><label class="secondary file-label">Import a game backup<input type="file" id="start-import" accept="application/json,.json" hidden></label></div></dialog>
@@ -59,36 +64,9 @@ function illustratedPet(c,kind,stage,phase,accessory,running){
  c.restore();return true;
 }
 
-const UNCOUNTABLE_FOODS = [
-    { name: 'bread' },
-    { name: 'chocolate' },
-    { name: 'meat' },
-    { name: 'milk' },
-    { name: 'rice' },
-    { name: 'salad' },
-    { name: 'water' },
-    { name: 'lemonade' },
-    { name: 'orange juice' }
-];
+const UNCOUNTABLE_FOODS = [{"name": "milk"}, {"name": "rice"}, {"name": "chocolate"}, {"name": "salad"}, {"name": "bread"}, {"name": "meat"}];
 
-const COUNTABLE_FOODS = [
-    { singular: 'burger', plural: 'burgers' },
-    { singular: 'egg', plural: 'eggs' },
-    { singular: 'meatball', plural: 'meatballs' },
-    { singular: 'sandwich', plural: 'sandwiches' },
-    { singular: 'pancake', plural: 'pancakes' },
-    { singular: 'crepe', plural: 'crepes' },
-    { singular: 'kiwi', plural: 'kiwis' },
-    { singular: 'mango', plural: 'mangoes' },
-    { singular: 'lime', plural: 'limes' },
-    { singular: 'lemon', plural: 'lemons' },
-    { singular: 'banana', plural: 'bananas' },
-    { singular: 'apple', plural: 'apples' },
-    { singular: 'pineapple', plural: 'pineapples' },
-    { singular: 'coconut', plural: 'coconuts' },
-    { singular: 'tomato', plural: 'tomatoes' },
-    { singular: 'onion', plural: 'onions' }
-];
+const COUNTABLE_FOODS = [{"singular": "apple", "plural": "apples"}, {"singular": "onion", "plural": "onions"}, {"singular": "pineapple", "plural": "pineapples"}, {"singular": "lemon", "plural": "lemons"}, {"singular": "meatball", "plural": "meatballs"}, {"singular": "burger", "plural": "burgers"}, {"singular": "pancake", "plural": "pancakes"}, {"singular": "chip", "plural": "chips"}, {"singular": "coconut", "plural": "coconuts"}, {"singular": "egg", "plural": "eggs"}, {"singular": "sandwich", "plural": "sandwiches"}, {"singular": "crepe", "plural": "crepes"}, {"singular": "kiwi", "plural": "kiwis"}, {"singular": "mango", "plural": "mangoes"}, {"singular": "lime", "plural": "limes"}, {"singular": "banana", "plural": "bananas"}, {"singular": "tomato", "plural": "tomatoes"}];
 
 
 function generateQuestion() {
@@ -330,7 +308,7 @@ function obstacleArt(c,w,horizon,ground,o){
  if(o.kind===0){box(c,-bw/2,-bh,bw,bh,7,'#bd7a42','#6d492e');for(let j=1;j<4;j++)line(c,-bw/2+5,-bh+j*bh/4,bw/2-5,-bh+j*bh/4,'#edc18a',3);line(c,-bw/2+6,-bh+5,bw/2-6,-5,'#754e31',6);line(c,bw/2-6,-bh+5,-bw/2+6,-5,'#754e31',6);}
  else if(o.kind===1){oval(c,-bw*.32,0,bw*.12,bw*.12,'#514b40');oval(c,bw*.32,0,bw*.12,bw*.12,'#514b40');box(c,-bw/2,-bh*.72,bw,bh*.65,6,'#718c79','#354f43');for(let j=0;j<3;j++)oval(c,(j-1)*bw*.27,-bh*.75,bw*.19,bw*.18,'#eab16b','#86603b');line(c,bw/2,-bh*.4,bw/2,-bh*1.05,'#354f43',5);}
  else{box(c,-bw*.46,-bh*.68,bw*.12,bh*.68,3,'#65533c');box(c,bw*.34,-bh*.68,bw*.12,bh*.68,3,'#65533c');box(c,-bw/2,-bh,bw,bh*.66,5,'#f9cd62','#755333');c.save();c.beginPath();c.rect(-bw/2+3,-bh+3,bw-6,bh*.66-6);c.clip();for(let j=-3;j<5;j++)poly(c,[[j*bw*.25,-bh],[j*bw*.25+bw*.12,-bh],[j*bw*.25+bw*.45,-bh*.34],[j*bw*.25+bw*.33,-bh*.34]],'#865944');c.restore();}
- box(c,-bw*.43,-bh-28,bw*.86,22,5,'#a6483c','#fff1cc');c.fillStyle='#fff9e8';c.textAlign='center';c.font='bold '+Math.max(10,Math.min(14,bw*.15))+'px Trebuchet MS';c.fillText('DODGE!',0,-bh-12);c.restore();
+ c.restore();
 }
 
 // Rounded, gently uneven outlines give each original pet a storybook finish.
@@ -377,7 +355,7 @@ function mochiBody(c,kind,stage,phase,accessory,running){
 }
 
 // Each food is its own illustration. No fonts, emojis, remote images or fallback symbols.
-const FOOD_ART_NAMES=['bread','chocolate','meat','milk','rice','salad','water','lemonade','orange juice','burgers','eggs','meatballs','sandwiches','pancakes','crepes','kiwis','mangoes','limes','lemons','bananas','apples','pineapples','coconuts','tomatoes','onions'];
+const FOOD_ART_NAMES=["milk", "rice", "chocolate", "salad", "bread", "meat", "apples", "onions", "pineapples", "lemons", "meatballs", "burgers", "pancakes", "chips", "coconuts", "eggs", "sandwiches", "crepes", "kiwis", "mangoes", "limes", "bananas", "tomatoes"];
 function foodArt(c,name,x,y,s=1){
  name=name.toLowerCase();name={apple:'apples',banana:'bananas'}[name]||name;if(!FOOD_ART_NAMES.includes(name))throw Error('Missing food illustration: '+name);
  c.save();c.translate(x,y);c.scale(s,s);c.lineJoin='round';
@@ -407,7 +385,7 @@ function foodArt(c,name,x,y,s=1){
   c.beginPath();c.moveTo(-39,6);c.quadraticCurveTo(-33,38,0,38);c.quadraticCurveTo(33,38,39,6);c.closePath();c.fillStyle='#95bdb9';c.fill();c.strokeStyle='#668f8d';c.stroke();line(c,-32,12,32,12,'#d5e8d8',3);box(c,-13,37,26,4,2,'#719f9b');
  }else if(name==='burgers'){
   plate();box(c,-33,15,66,17,9,'#e5b379','#bf8c57');box(c,-35,8,70,12,6,'#785139');poly(c,[[-37,7],[-23,0],[-9,6],[8,0],[25,5],[36,0],[34,9],[-34,13]],'#8fb774');box(c,-32,-1,64,8,3,'#db8676');poly(c,[[-31,-7],[34,-7],[25,4],[11,-2],[-5,4],[-31,0]],'#f4cf6a');c.beginPath();c.ellipse(0,-6,35,25,0,Math.PI,TAU);c.lineTo(35,-4);c.lineTo(-35,-4);c.closePath();c.fillStyle='#eac18a';c.fill();c.strokeStyle='#bd915e';c.stroke();for(let i=0;i<9;i++)oval(c,-23+i%5*11,-14-Math.floor(i/5)*8,2.5,1,'#fff0c5');
- }else if(name==='chips / fries'){
+ }else if(name==='chips'){
   for(let i=0;i<8;i++){c.save();c.translate(-27+i*8,-12);c.rotate((i-3.5)*.075);box(c,-4,-27-i%3*5,8,53,2,'#f4d27e','#ceab62');line(c,-1,-23-i%3*5,-1,14,'#fff1bc',2);c.restore();}poly(c,[[-35,-3],[35,-3],[27,38],[-27,38]],'#d98682','#b9716b');c.beginPath();c.moveTo(-34,-3);c.quadraticCurveTo(0,21,34,-3);c.strokeStyle='#f0beb1';c.lineWidth=3;c.stroke();oval(c,0,23,11,9,'#ffe5ae');
  }else if(name==='eggs'){
   plate();oval(c,-16,-6,19,29,'#fff4da','#c8bca6');oval(c,19,4,18,27,'#efd9b8','#c5ac8a');oval(c,-21,-13,4,10,'#fffdf2');
@@ -544,42 +522,67 @@ function syncBgm(){
   if(active!==bgmActive){bgmActive=active;bgmBus.gain.cancelScheduledValues(now);bgmBus.gain.setTargetAtTime(active?.42:0,now,.10);if(active){bgmNext=now+.05;bgmStep=0;if(audio.state==='suspended')audio.resume().catch(()=>{});}}
   if(!active||audio.state==='suspended')return;
   if(bgmNext<now-.2)bgmNext=now+.05;
-  const melody=[72,76,79,76,74,76,69,null,72,74,76,79,81,79,76,null,69,72,76,72,67,69,72,null,74,76,79,74,72,null,67,null];
-  while(bgmNext<now+.18){const i=bgmStep%melody.length;if(melody[i]!==null)musicNote(melody[i],bgmNext,1.05,.035);if(i%8===0){const root=[48,53,57,55][Math.floor(i/8)];for(const n of [root,root+7,root+12])musicNote(n,bgmNext,3.3,.014);}bgmNext+=.48;bgmStep++;}
+  const melody=[72,79,76,79,74,81,77,81,69,76,72,76,71,79,74,79];
+  while(bgmNext<now+.18){const i=bgmStep%16,root=[48,53,45,55][Math.floor((bgmStep%64)/16)];
+   musicNote(melody[i],bgmNext,.16,.035,'triangle');
+   if(i%2===0)musicNote(root+(i%4===2?12:0),bgmNext,.18,.075,'triangle');
+   if(i%4===0){musicNote(31,bgmNext,.12,.18,'sine');musicNote(43,bgmNext,.06,.09,'sine');}
+   if(i%4===2){musicNote(90,bgmNext,.045,.025,'triangle');musicNote(96,bgmNext,.05,.02,'triangle');}
+   bgmNext+=60/(run.rush>0?156:140)/4;bgmStep++;
+  }
  }catch{}
 }
-const PICKUP_SPEED=360,GATE_SECONDS=5,QUESTION_INTERVAL=7.5,FOOD_PREVIEW_SECONDS=2;
+const PICKUP_SPEED=480,GATE_SECONDS=6,QUESTION_INTERVAL=5.8,FOOD_PREVIEW_SECONDS=2;
 let run=null;
 function laneX(lane){return width*(.26+lane*.24);}
 function laneStart(){return Math.max(height*.34,Math.min(275,height*.46));}
 function groundY(){return height*.84;}
 function gatePosition(elapsed){const p=clamp(elapsed/GATE_SECONDS,0,1);return laneStart()+35+(groundY()-laneStart()-55)*(1-Math.pow(1-p,2));}
 function createMission(){const all=[...UNCOUNTABLE_FOODS.map(f=>f.name),...COUNTABLE_FOODS.map(f=>f.plural)];return{name:all[Math.floor(Math.random()*all.length)],target:10+Math.floor(Math.random()*6),current:0};}
-function startRun(){if(!save.species)return;if(stageIndex()>save.seenStage){goHome();return;}careAdvance();if(save.pendingEarned||save.pendingHappy)settlePending();for(const d of document.querySelectorAll('dialog[open]'))d.close();run={state:'running',lane:1,drawX:laneX(1),score:0,hearts:3,earned:0,correct:0,elapsed:0,scoreClock:0,visual:0,anim:0,questionClock:0,spawnClock:0,obstacleClock:0,obstacle:null,gate:null,foodPreview:0,tripped:false,items:[],rush:0,rushSpawn:0,hold:0,nextRush:false,messageUntil:0,mission:createMission(),particles:[],settled:false};$('room').hidden=true;$('runner').hidden=false;$('question-panel').hidden=true;$('rush-banner').hidden=true;$('run-message').textContent='Collect coins. Your first question is coming!';run.messageUntil=4;updateRunHUD();tone(660,.1);lastFrame=performance.now();}
+function startRun(){if(!save.species)return;if(stageIndex()>save.seenStage){goHome();return;}careAdvance();if(save.pendingEarned||save.pendingHappy)settlePending();for(const d of document.querySelectorAll('dialog[open]'))d.close();run={state:'running',lane:1,drawX:laneX(1),score:0,streak:0,bestStreak:0,hearts:3,earned:0,correct:0,elapsed:0,scoreClock:0,visual:0,anim:0,questionClock:0,spawnClock:0,obstacleClock:0,obstacle:null,gate:null,foodPreview:0,tripped:false,items:[],rush:0,rushSpawn:0,hold:0,nextRush:false,messageUntil:0,mission:createMission(),particles:[],settled:false};$('room').hidden=true;$('runner').hidden=false;$('question-panel').hidden=true;$('rush-banner').hidden=true;$('run-message').textContent='Collect coins. Your first question is coming!';run.messageUntil=4;updateRunHUD();tone(660,.1);lastFrame=performance.now();}
 function updateRunHUD(){if(!run)return;$('lives').textContent='♥ '.repeat(run.hearts)+'♡ '.repeat(3-run.hearts);$('score').textContent=Math.floor(run.score);$('run-coins').textContent=format(run.earned);$('mission-text').textContent=`Collect ${run.mission.name.toUpperCase()} · ${run.mission.current}/${run.mission.target}`;$('bonus-progress').textContent=`${run.correct%5} / 5 to coin rush`;}
 function award(coins,points){run.earned+=coins;run.score+=points;save.coins+=coins;save.pendingEarned+=coins;persist();updateRunHUD();}
 function chooseLane(lane){if(!run||run.state!=='running')return;run.lane=clamp(lane,0,2);}
-function spawnPickup(lane=Math.floor(Math.random()*3),forceCoin=false,y=laneStart(),bonus=false){if(!bonus&&run.obstacle&&run.obstacle.lane===lane)return;const coin=forceCoin||Math.random()<.65;run.items.push({lane,y,progress:(y-laneStart())/(groundY()-laneStart()),type:coin?'coin':'food',name:coin?'coin':run.mission.name,bonus,taken:false});}
-function spawnGate(){run.obstacle=null;run.obstacleClock=0;const q=generateQuestion();const lanes=[0,1,2];for(let i=2;i>0;i--){let j=Math.floor(Math.random()*(i+1));[lanes[i],lanes[j]]=[lanes[j],lanes[i]];}const choices=[{lane:lanes[0],text:q.correctOption,isCorrect:true,isHazard:false},{lane:lanes[1],text:q.wrongOption,isCorrect:false,isHazard:false},{lane:lanes[2],text:'BLOCKED',isCorrect:false,isHazard:true}].sort((a,b)=>a.lane-b.lane);run.gate={question:q,choices,elapsed:0,y:gatePosition(0)};run.foodPreview=FOOD_PREVIEW_SECONDS;run.items=[];$('target-food').textContent=q.foodName.toUpperCase();paintFoodCanvas($('target-picture'),q.foodName);$('target-picture').setAttribute('aria-label',q.foodName+' illustration');$('food-prompt-label').textContent='LOOK! WHAT FOOD IS THIS?';$('question-panel').hidden=false;$('question-panel').classList.remove('pop-food');void $('question-panel').offsetWidth;$('question-panel').classList.add('pop-food');$('reaction-time').textContent='Get ready…';$('gate-clock-fill').style.width='100%';tone(760,.14);}
+function spawnPickup(lane=Math.floor(Math.random()*3),forceCoin=false,y=laneStart(),bonus=false){if(!bonus&&run.obstacle&&run.obstacle.lane===lane)return;const coin=forceCoin;run.items.push({lane,y,progress:(y-laneStart())/(groundY()-laneStart()),type:coin?'coin':'food',name:coin?'coin':run.mission.name,bonus,taken:false});}
+function spawnGate(){run.trailRemaining=0;run.spawnClock=0;run.obstacleClock=0;const q=generateQuestion();const lanes=[0,1,2];for(let i=2;i>0;i--){let j=Math.floor(Math.random()*(i+1));[lanes[i],lanes[j]]=[lanes[j],lanes[i]];}const choices=[{lane:lanes[0],text:q.correctOption,isCorrect:true,isHazard:false},{lane:lanes[1],text:q.wrongOption,isCorrect:false,isHazard:false},{lane:lanes[2],text:'BLOCKED',isCorrect:false,isHazard:true}].sort((a,b)=>a.lane-b.lane);run.gate={question:q,choices,elapsed:0,y:gatePosition(0)};run.foodPreview=FOOD_PREVIEW_SECONDS;$('target-food').textContent=q.foodName.toUpperCase();paintFoodCanvas($('target-picture'),q.foodName);$('target-picture').setAttribute('aria-label',q.foodName+' illustration');$('food-prompt-label').textContent='LOOK! WHAT FOOD IS THIS?';$('question-panel').hidden=false;$('question-panel').classList.remove('pop-food');void $('question-panel').offsetWidth;$('question-panel').classList.add('pop-food');$('reaction-time').textContent='Get ready…';$('gate-clock-fill').style.width='100%';tone(760,.14);}
 
 function particles(x,y){for(let i=0;i<18;i++)run.particles.push({x,y,vx:(Math.random()-.5)*180,vy:-50-Math.random()*170,life:1,color:['#f6db8b','#b4d5a1','#e8a78b'][i%3]});}
+function showFoodReward(text){const el=$('food-reward');el.textContent=text;el.classList.remove('reward-show');void el.offsetWidth;el.classList.add('reward-show');}
 function runMessage(text,seconds=2){$('run-message').textContent=text;run.messageUntil=run.elapsed+seconds;}
 function resolveGate(){const gate=run.gate,choice=gate.choices.find(c=>c.lane===run.lane);run.gate=null;$('question-panel').hidden=true;run.questionClock=0;
- if(choice.isCorrect){run.correct++;award(10,100);save.pendingHappy+=2;persist();particles(laneX(run.lane),groundY()-65);tone(880,.2);runMessage('Correct! +100 points · +10 coins');run.hold=.8;run.nextRush=run.correct%5===0;updateRunHUD();}
- else{run.hearts--;run.tripped=true;run.state='explanation';updateRunHUD();$('wrong-answer').textContent=`You chose: “${choice.isHazard?'Blocked delivery lane':choice.text}”`;$('explain-detail').innerHTML=gate.question.explanationDetail;$('explain-rule').innerHTML=gate.question.explanationRule;$('retry-btn').textContent=run.hearts?'I’ve got it — keep running →':'See what I earned →';tone(220,.2);openDialog('explain-dialog');}
+ if(choice.isCorrect){run.correct++;run.streak++;run.bestStreak=Math.max(run.bestStreak,run.streak);award(10,100*Math.min(4,run.streak));save.pendingHappy+=2;persist();particles(laneX(run.lane),groundY()-65);tone(880,.2);runMessage('CORRECT! ×'+Math.min(4,run.streak)+' COMBO · +'+(100*Math.min(4,run.streak))+' points');run.hold=.8;run.nextRush=run.correct%5===0;updateRunHUD();}
+ else{run.streak=0;run.hearts--;run.tripped=true;run.state='explanation';updateRunHUD();$('wrong-answer').textContent=`You chose: “${choice.isHazard?'Blocked delivery lane':choice.text}”`;$('explain-detail').innerHTML=gate.question.explanationDetail;$('explain-rule').innerHTML=gate.question.explanationRule;$('retry-btn').textContent=run.hearts?'I’ve got it — keep running →':'See what I earned →';tone(220,.2);openDialog('explain-dialog');}
 }
-function startRush(){run.obstacle=null;run.obstacleClock=0;run.nextRush=false;run.rush=3;run.rushSpawn=0;run.items=[];$('rush-banner').hidden=false;$('rush-clock').textContent='3.0';runMessage('Five correct! The night market is yours.',1.8);for(let y=laneStart();y<groundY();y+=65)for(let lane=0;lane<3;lane++)spawnPickup(lane,true,y,true);tone(1046,.25);}
+function startRush(){run.obstacle=null;run.obstacleClock=0;run.nextRush=false;run.rush=5;run.rushSpawn=0;run.items=[];$('rush-banner').hidden=false;$('rush-clock').textContent='5.0';runMessage('Five correct! The night market is yours.',1.8);for(let lane=0;lane<3;lane++)spawnPickup(lane,true,laneStart(),true);tone(1046,.25);}
 function finishRush(){run.obstacle=null;run.obstacleClock=0;run.rush=0;run.items=run.items.filter(i=>!i.bonus);$('rush-banner').hidden=true;run.questionClock=0;run.spawnClock=0;runMessage('Hello, sunshine! Back to the market.');}
-function updateRun(dt){if(!run||run.state!=='running')return;run.elapsed+=dt;run.scoreClock+=dt;run.visual+=dt*1.65;run.anim+=dt*24; // visual cadence only
+function updateRun(dt){if(!run||run.state!=='running')return;run.elapsed+=dt;run.scoreClock+=dt;run.visual+=dt*1.6;run.anim+=dt*24; // visual cadence only
  if(run.scoreClock>=1){run.score+=Math.floor(run.scoreClock);run.scoreClock%=1;updateRunHUD();}
  if(run.messageUntil<run.elapsed)$('run-message').textContent='';
  for(const p of run.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=260*dt;p.life-=dt*1.3;}run.particles=run.particles.filter(p=>p.life>0);
  if(run.hold>0){run.hold-=dt;if(run.hold<=0&&run.nextRush)startRush();return;}
  const wasRush=run.rush>0;
  if(wasRush){run.rush=Math.max(0,run.rush-dt);$('rush-clock').textContent=run.rush.toFixed(1);run.rushSpawn+=dt;while(run.rushSpawn>=.14){run.rushSpawn-=.14;for(let lane=0;lane<3;lane++)spawnPickup(lane,true,laneStart(),true);}}
- else if(run.gate){if(run.foodPreview>0){run.foodPreview=Math.max(0,run.foodPreview-dt);if(run.foodPreview===0){$('food-prompt-label').textContent='CHOOSE A QUESTION IN THE LANES';$('reaction-time').textContent=GATE_SECONDS.toFixed(1)+'s to choose';}return;}run.gate.elapsed+=dt;run.gate.y=gatePosition(run.gate.elapsed);$('reaction-time').textContent=Math.max(0,GATE_SECONDS-run.gate.elapsed).toFixed(1)+'s to choose';$('gate-clock-fill').style.width=Math.max(0,100*(1-run.gate.elapsed/GATE_SECONDS))+'%';if(run.gate.elapsed>=GATE_SECONDS)resolveGate();}
- else{run.obstacleClock+=dt;if(!run.obstacle&&run.obstacleClock>=2&&run.questionClock<3.5)spawnObstacle();if(run.obstacle){run.obstacle.elapsed+=dt;if(run.obstacle.elapsed>=3){const hit=run.obstacle.lane===run.lane;run.obstacle=null;if(hit){hitObstacle();return;}}}run.questionClock+=dt;if(run.questionClock>=QUESTION_INTERVAL){spawnGate();}else{run.spawnClock+=dt;if(run.spawnClock>=.58){run.spawnClock=0;spawnPickup();}}}
- const ground=groundY();for(const item of run.items){const previous=item.y;item.y+=PICKUP_SPEED*dt;item.progress=(item.y-laneStart())/(ground-laneStart());if(!item.taken&&item.lane===run.lane&&previous<=ground+18&&item.y>=ground-18){item.taken=true;if(item.type==='coin'){award(1,5);tone(880,.04);}else{award(2,15);if(item.name===run.mission.name){run.mission.current++;if(run.mission.current>=run.mission.target){award(20,0);particles(laneX(run.lane),ground-40);runMessage('Shopping mission complete! +20 coins');run.mission=createMission();}else runMessage('+1 '+item.name+' · +2 coins',.9);}updateRunHUD();tone(660,.08);}}}
+ else {
+ if(run.gate){
+  if(run.foodPreview>0){run.foodPreview=Math.max(0,run.foodPreview-dt);}
+  else{run.gate.elapsed+=dt;run.gate.y=gatePosition(run.gate.elapsed);}
+  $('food-prompt-label').textContent='CHOOSE A QUESTION IN THE LANES';
+  $('reaction-time').textContent='Choose your answer lane';
+  $('gate-clock-fill').style.width=Math.max(0,100*(1-run.gate.elapsed/GATE_SECONDS))+'%';
+ }else{run.questionClock+=dt;if(run.questionClock>=QUESTION_INTERVAL&&!run.items.length&&!run.obstacle)spawnGate();}
+ // Let existing traffic pass before revealing a question; keep its approach clear.
+ run.obstacleClock+=dt;
+ const questionPending=!!run.gate||run.questionClock>=QUESTION_INTERVAL;
+ if(!run.obstacle&&run.obstacleClock>=2&&!questionPending)spawnObstacle();
+ if(run.obstacle){run.obstacle.elapsed+=dt;if(run.obstacle.elapsed>=4){const hit=run.obstacle.lane===run.lane;run.obstacle=null;if(hit){hitObstacle();return;}}}
+ run.spawnClock+=dt;
+ if(!questionPending&&run.spawnClock>=.45){run.spawnClock=0;
+  if(!run.trailRemaining){const available=[0,1,2].filter(l=>!run.obstacle||run.obstacle.lane!==l);run.trailLane=available[Math.floor(Math.random()*available.length)];run.trailRemaining=5;}
+  spawnPickup(run.trailLane,run.trailRemaining>1);run.trailRemaining--;
+ }
+ if(run.gate&&run.foodPreview<=0&&run.gate.elapsed>=GATE_SECONDS){resolveGate();if(run.state!=='running')return;}
+ }
+ const ground=groundY();for(const item of run.items){const previous=item.y;item.y+=(groundY()-laneStart())/Math.max(2.8,3.8-run.correct*.06)*dt;item.progress=(item.y-laneStart())/(ground-laneStart());if(!item.taken&&item.lane===run.lane&&previous<=ground+18&&item.y>=ground-18){item.taken=true;if(item.type==='coin'){award(1,5);tone(880,.04);}else{award(5,50);showFoodReward('+5 coins · +50 points');particles(laneX(run.lane),ground-40);if(item.name===run.mission.name){run.mission.current++;if(run.mission.current>=run.mission.target){award(20,0);showFoodReward('+25 coins · +50 points · Basket complete!');particles(laneX(run.lane),ground-40);runMessage('Shopping mission complete! +20 coins');run.mission=createMission();}else runMessage('+1 '+item.name+' · +5 coins',.9);}updateRunHUD();tone(660,.08);}}}
  run.items=run.items.filter(i=>!i.taken&&i.y<height+60);if(wasRush&&run.rush<=0)finishRush();
 }
 function pauseRun(){if(!run||run.state!=='running')return;run.state='paused';openDialog('pause-dialog');}
@@ -617,7 +620,7 @@ function renderIntro(){const c=$('intro-canvas').getContext('2d');c.clearRect(0,
 $('intro-next').addEventListener('click',()=>{save.introSeen=true;persist();closeDialog('intro-dialog');if(!save.species)openDialog('choose-dialog');else checkGrowth();});
 $('replay-intro').addEventListener('click',()=>{closeDialog('help-dialog');renderIntro();openDialog('intro-dialog');});
 $('intro-dialog').addEventListener('cancel',e=>e.preventDefault());$('growth-dialog').addEventListener('cancel',e=>{e.preventDefault();finishGrowth();});$('growth-done').addEventListener('click',finishGrowth);
-runCanvas.addEventListener('click',e=>{if(!run||!run.gate||run.foodPreview>0||run.state!=='running')return;const rect=runCanvas.getBoundingClientRect(),x=(e.clientX-rect.left)*width/rect.width,y=(e.clientY-rect.top)*height/rect.height;if(y<run.gate.y-110||y>run.gate.y+25)return;chooseLane(Math.round((x/width-.26)/.24));});
+runCanvas.addEventListener('click',e=>{if(!run||!run.gate||run.foodPreview>0||run.state!=='running')return;const r=runCanvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height,p=Math.min(1,run.gate.elapsed/GATE_SECONDS),d=.16+.84*Math.pow(p,1.25),cy=.32+.52*d;if(y>cy-.2*d&&y<cy+.03)chooseLane(clamp(Math.round((x-.5)/(.24*d)+1),0,2));});
 
 // Three independent browser-local adventures. Never overwrite a slot to make space.
 let deleteSlotPending=null;
@@ -643,9 +646,95 @@ $('start-dialog').addEventListener('cancel',e=>e.preventDefault());
 $('back-to-games').addEventListener('click',showStartMenu);
 $('start-import').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{if(slots.filter(Boolean).length>=3){$('save-menu-message').textContent='All 3 save slots are full. Delete one before importing a backup.';return;}if(file.size>1000000)throw Error();const restored=JSON.parse(await file.text());if(!validSave(restored))throw Error();persist();activeSlot=null;save=restored;save.name=save.name.slice(0,18);migrateSave();careAdvance();settlePending();persist();renderStartMenu();$('save-menu-message').textContent='Backup imported. Choose Continue game to play.';}catch{$('save-menu-message').textContent='This is not a valid Little Market backup.';}finally{e.target.value='';}});
 
-function spawnObstacle(lane=Math.floor(Math.random()*3),kind=Math.floor(Math.random()*3)){
+function spawnObstacle(lane=Math.floor(Math.random()*3),kind=Math.floor(Math.random()*5)){
  if(!run||run.state!=='running'||run.rush>0||run.nextRush||run.gate||run.hold>0||run.obstacle)return false;
- run.obstacle={lane:clamp(lane,0,2),kind:clamp(kind,0,2),elapsed:0};run.obstacleClock=-5;run.items=run.items.filter(i=>i.lane!==run.obstacle.lane);runMessage('Watch out! Lane '+(run.obstacle.lane+1)+' is blocked — move to another lane.',3);return true;
+ const clear=[0,1,2].filter(l=>!run.items.some(i=>!i.taken&&i.lane===l)&&!(run.trailRemaining>0&&run.trailLane===l));if(!clear.length)return false;lane=clear.includes(lane)?lane:clear[Math.floor(Math.random()*clear.length)];run.obstacle={lane,kind:clamp(kind,0,4),elapsed:0};run.obstacleClock=-5;runMessage('Watch out! Lane '+(run.obstacle.lane+1)+' is blocked — move to another lane.',3);return true;
 }
-function hitObstacle(){run.hearts--;run.tripped=true;run.state='explanation';run.items=[];updateRunHUD();$('wrong-answer').textContent='Oops! You bumped into a market obstacle.';$('explain-detail').textContent='Large obstacles block one lane. Move left or right to use either of the two clear lanes.';$('explain-rule').textContent='Use ← →, A / D, or the arrow buttons to dodge. Coin rushes are always obstacle-free!';$('retry-btn').textContent=run.hearts?'Keep running — press Space →':'See what I earned →';tone(220,.2);openDialog('explain-dialog');}
-</script></body></html>
+function hitObstacle(){run.streak=0;run.hearts--;run.tripped=true;run.state='explanation';run.items=[];updateRunHUD();$('wrong-answer').textContent='Oops! You bumped into a market obstacle.';$('explain-detail').textContent='Large obstacles block one lane. Move left or right to use either of the two clear lanes.';$('explain-rule').textContent='Use ← →, A / D, or the arrow buttons to dodge. Coin rushes are always obstacle-free!';$('retry-btn').textContent=run.hearts?'Keep running — press Space →':'See what I earned →';tone(220,.2);openDialog('explain-dialog');}
+</script>
+<style>
+#rush-hud{position:absolute;top:100px;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;background:#173d38ed;color:#fff7dc;border:1px solid #f2c666;padding:9px 18px;border-radius:18px;pointer-events:none;z-index:4;font-size:13px;white-space:nowrap}#rush-hud b{color:#ffda76;font-size:19px}#runner.rush-danger{box-shadow:inset 0 0 70px #ec743955}#runner.rush-combo{box-shadow:inset 0 0 60px #ffd56544}.preview-note{position:fixed;bottom:3px;right:8px;font:10px Arial;color:#fff;background:#264c48;padding:4px 8px;border-radius:9px;z-index:100;pointer-events:none}@media(max-width:650px){#rush-hud{top:112px;font-size:10px;padding:7px;gap:8px}#rush-hud b{font-size:14px}}
+</style>
+<script>
+const rushHud=document.createElement('div');rushHud.id='rush-hud';$('runner').appendChild(rushHud);
+let rushLastSecond=-1;
+const rushUpdate=updateRun;
+updateRun=function(dt){rushUpdate(dt);if(!run)return;const best=save.scores.length?Math.max(...save.scores.map(s=>s.score)):0;
+rushHud.innerHTML='<span>COMBO <b>×'+Math.max(1,Math.min(4,run.streak||0))+'</b></span><span>BEST <b>'+best+'</b></span>';
+$('runner').classList.toggle('rush-danger',false);$('runner').classList.toggle('rush-combo',run.streak>=3);
+};
+const rushStart=startRun;startRun=function(){rushStart();if(run){rushLastSecond=-1;runMessage('Follow the coin trails! Dodge deliveries, build combos and beat your best.',5);}};
+const rushEnd=endRun;endRun=function(){const best=save.scores.length?Math.max(...save.scores.map(s=>s.score)):0;const fresh=run&&!run.settled;rushEnd();if(fresh&&run){$('result-title').textContent=run.score>best?'NEW PERSONAL BEST!':'Run complete!';$('reward-badge').textContent='★ Best streak: '+(run.bestStreak||0)+' correct ★';}};
+document.querySelectorAll('.play-run').forEach(b=>{b.title='Endless third-person run · build combos · beat your best';});
+</script>
+
+<script>
+let cameraLane=1;
+runnerArt=function(c,w,h,time){
+ if(!run)return;
+ const running=run.state==='running',night=run.rush>0;
+ cameraLane=1;
+ const H=h*.32;
+ const project=(lane,p)=>{const d=.16+.84*Math.pow(Math.max(0,p),1.25);return{x:w*.5+(lane-1)*w*.24*d,y:H+(h*.84-H)*d,d};};
+ const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,night?'#142735':'#8fbac5');sky.addColorStop(.48,night?'#645773':'#f7ddae');sky.addColorStop(1,night?'#252f37':'#b6a28a');c.fillStyle=sky;c.fillRect(0,0,w,h);
+ oval(c,w*.75,H*.53,32,32,night?'#f9e9c2':'#fff2cc');
+ // A distant town, roof lines and individual windows stay anchored to the horizon.
+ for(let i=0;i<19;i++){const x=i*w/18,top=H-35-(i*17%47),bw=w/16;box(c,x,top,bw,85,0,night?'#35434d':['#bea68c','#cbb9a0','#abac98'][i%3]);poly(c,[[x-3,top],[x+bw/2,top-17],[x+bw+3,top]],'#796e63');for(let j=0;j<3;j++)box(c,x+8+j*bw/4,top+13,6,12,1,night?'#d9b574':'#596e6b');}
+ const road=p=>[project(-.55,p),project(2.55,p)];
+ const far=road(0),near=road(1.3);
+ poly(c,[[far[0].x,far[0].y],[far[1].x,far[1].y],[near[1].x,near[1].y],[near[0].x,near[0].y]],night?'#485254':'#a79b87');
+ // Perspective paving stones: staggered joints, softly lit edges, no flat stripe carpet.
+ for(let row=27;row>=0;row--){const p=(row/28+run.visual*.12)%1,q=Math.min(1.25,p+.032);
+ for(let col=0;col<8;col++){const l=-.55+col*3.1/8+(row%2)*.194,r=Math.min(2.55,l+.383);if(l>=2.55)continue;const a=project(l,p),b=project(r,p),d=project(r,q),e=project(l,q);poly(c,[[a.x,a.y],[b.x,b.y],[d.x,d.y],[e.x,e.y]],night?['#525b5c','#4d5657','#596061'][(row+col)%3]:['#b7ab96','#bfb29b','#ad9f89','#c3b69f'][(row*3+col)%4]);line(c,a.x,a.y,b.x,b.y,night?'#78818155':'#e4d8c277',Math.max(.4,a.d));}}
+ for(const edge of [-.6,2.6]){const a=project(edge,0),b=project(edge,1.3);line(c,a.x,a.y,b.x,b.y,night?'#86908b':'#e2d4bb',9);}
+ for(const l of [.5,1.5])for(let i=0;i<19;i++){const p=(i/19+run.visual*.12)%1,a=project(l,p),b=project(l,Math.min(1,p+.014));line(c,a.x,a.y,b.x,b.y,'#f4e5bb80',1+3*a.d);}
+ // Recycle only beyond the camera: stalls travel completely off-screen first.
+ const scenery=[];for(let i=0;i<20;i++)for(const side of [-1,1])scenery.push({p:(i/8+run.visual*.12)%2.5,side,i});
+ scenery.sort((a,b)=>a.p-b.p).forEach(o=>{const a=project(o.side<0?-1.2:3.2,o.p),scale=a.d*Math.min(w/850,1.5);c.save();c.translate(a.x,a.y);c.scale(scale,scale);c.globalAlpha=Math.min(1,o.p/.09);
+ oval(c,25,8,144,24,'#27382d35');
+ const wall=['#c8b39a','#bf997a','#a9b2a0'][o.i%3],awning=['#476d60','#995b48','#b08b46'][o.i%3];
+ box(c,-110,-280,220,280,1,wall);poly(c,[[110,-280],[144,-258],[144,-8],[110,0]],'#776f5d');
+ for(let j=0;j<2;j++){box(c,-82+j*103,-260,60,54,2,'#e4d6b9','#7c7969');box(c,-77+j*103,-255,50,44,0,'#536d6a');line(c,-52+j*103,-254,-52+j*103,-212,'#c4b69a',3);line(c,-77+j*103,-233,-27+j*103,-233,'#c4b69a',3);}
+ box(c,-100,-188,200,129,1,'#344e43');
+ for(let j=0;j<8;j++){const x=-133+j*33;poly(c,[[x,-178],[x+33,-178],[x+25,-211],[x+4,-211]],j%2?'#eadfc5':awning);box(c,x,-178,33,16,4,j%2?'#ddd1b5':awning);}
+ for(const x of [-119,119]){box(c,x,-176,5,176,0,'#655640');}
+ box(c,-111,-69,222,68,2,'#96764e','#5c503b');poly(c,[[-111,-69],[111,-69],[99,-85],[-99,-85]],'#cfb181');
+ for(let j=0;j<7;j++)line(c,-101+j*33,-64,-101+j*33,-4,'#b8996d',2);
+ for(let crate=0;crate<3;crate++){const x=-74+crate*72;box(c,x-30,-103,60,24,2,'#735e3d','#c7a56e');for(let j=0;j<6;j++)oval(c,x-21+(j%3)*20,-103-Math.floor(j/3)*11,10,9,['#bb6847','#b9ad5e','#d7b564'][(crate+o.i)%3]);}
+ // Lamps, planter pots and hanging shop signs give the street depth.
+ line(c,104,-244,158,-244,'#45594e',5);box(c,132,-240,42,30,4,'#f0d8a0','#5c644f');c.fillStyle='#4f5f43';c.font='bold 10px Georgia';c.textAlign='center';c.fillText(['FRESH','MARKET','FARM'][o.i%3],153,-221);
+ box(c,-148,-32,30,32,5,'#a36c4c');for(let j=0;j<5;j++){line(c,-133,-28,-149+j*8,-58-(j%2)*15,'#4e714b',3);oval(c,-149+j*8,-58-(j%2)*15,9,16,'#64865b');}
+ c.restore();});
+ const objects=run.items.filter(i=>!i.taken).map(i=>({p:(i.y-laneStart())/(groundY()-laneStart()),item:i}));
+ if(run.obstacle)objects.push({p:run.obstacle.elapsed/4,obstacle:run.obstacle});
+ objects.sort((a,b)=>a.p-b.p).forEach(o=>{const lane=o.item?o.item.lane:o.obstacle.lane,a=project(lane,o.p);c.save();c.translate(a.x,a.y);const k=Math.max(.34,a.d)*Math.min(w/750,1.3);c.scale(k,k);if(o.obstacle){
+ const kind=o.obstacle.kind;
+ oval(c,0,4,90,18,'#30271e44');
+ if(kind===0){poly(c,[[-72,-110],[52,-110],[80,-91],[-44,-91]],'#d1a16d');poly(c,[[52,-110],[80,-91],[80,0],[52,-18]],'#795336');box(c,-72,-110,124,110,4,'#ad794e','#62472e');for(let j=1;j<5;j++)line(c,-68,-110+j*22,48,-110+j*22,'#d9ad7a',3);line(c,-63,-101,43,-9,'#e3bd89',8);}
+ else if(kind===1){for(const x of [-58,58]){oval(c,x,-2,15,19,'#34403b');oval(c,x,-2,6,9,'#b2b5a1');}box(c,-78,-75,156,62,6,'#527a6a','#2a4e40');for(let j=0;j<5;j++)oval(c,-56+j*28,-79-(j%2)*10,20,19,['#e5bb64','#d7895a','#9fac67'][j%3]);line(c,76,-65,96,-115,'#354e41',6);line(c,96,-115,117,-115,'#354e41',6);}
+ else if(kind===2){for(const x of [-58,58]){box(c,x-6,-105,12,105,3,'#77624c');box(c,x-22,-5,44,9,3,'#514637');}box(c,-82,-105,164,49,4,'#efc260','#927247');for(let j=0;j<5;j++)poly(c,[[-78+j*34,-102],[-61+j*34,-102],[-38+j*34,-59],[-55+j*34,-59]],'#715645');}
+ else if(kind===3){for(const x of [-40,32]){oval(c,x,-20,40,16,'#815d3b');box(c,x-37,-64,74,46,13,'#b78e58');for(let j=0;j<5;j++)line(c,x-34,-55+j*8,x+34,-55+j*8,'#e0bd85',2);oval(c,x,-64,37,12,'#dfb57b');for(let j=0;j<3;j++)oval(c,x-21+j*20,-71,14,13,'#b6bc72');}}
+ else{poly(c,[[-68,-16],[-37,-103],[20,-109],[58,-22],[41,0],[-49,0]],'#c6ab7e','#8b724e');oval(c,-8,-100,27,10,'#e4cfaa');line(c,-32,-83,20,-87,'#957950',5);line(c,-43,-20,40,-25,'#b49a6e',2);}
+ }else if(o.item.type==='coin'){oval(c,0,3,24,7,'#29372630');oval(c,3,-35,23,30,'#aa7630');oval(c,0,-35,23,30,'#ecc469','#ffecaa');oval(c,0,-35,17,24,'#dfad49','#ffe79e');star(c,0,-35,12,'#fff0a9');}else{oval(c,0,4,48,12,'#29372638');foodArt(c,o.item.name,0,-35,.8);}c.restore();});
+ if(run.gate){
+ const progress=run.foodPreview>0?0:Math.min(1,run.gate.elapsed/GATE_SECONDS);
+ for(const choice of run.gate.choices){const a=project(choice.lane,progress),x=a.x,cy=a.y,bw=w*.215*a.d,bh=Math.min(112,h*.18)*a.d,selected=run.lane===choice.lane;
+ c.save();c.globalAlpha=run.foodPreview>0?Math.min(1,Math.max(.05,1-run.foodPreview/FOOD_PREVIEW_SECONDS)):1;
+ for(const side of [-1,1])box(c,x+side*bw*.42-2*a.d,cy-bh,4*a.d,bh,1,'#8c6842');
+ box(c,x-bw/2,cy-bh,bw,bh*.85,Math.max(2,8*a.d),choice.isHazard?'#754c40':'#fff6de',selected?'#f3b334':'#315e57');
+ c.fillStyle=choice.isHazard?'#fff1d0':'#203f36';c.textAlign='center';
+ c.font='bold '+Math.max(4,Math.min(23,w*.027)*a.d)+'px Arial';
+ c.fillText(choice.isHazard?'BLOCKED':choice.text.startsWith('Are')?'Are there any':'Is there any',x,cy-bh*.64,bw-6*a.d);
+ c.fillText(choice.isHazard?'Move away':run.gate.question.foodName+'?',x,cy-bh*.32,bw-6*a.d);
+ c.restore();
+ }
+ }
+ // Fixed chase camera: the pet changes lanes, the horizon stays still.
+ const target=laneX(run.lane);run.drawX+=(target-run.drawX)*Math.min(1,frameDelta*12);
+ const petScale=Math.min(.8,w*.0011);
+ oval(c,run.drawX,h*.84+6,30*petScale,9*petScale,'#273e3b44');
+ petArt(c,save.species,stageIndex(),run.drawX,h*.84,petScale,run.anim,save.accessory,running);
+ for(const p of run.particles){c.globalAlpha=Math.max(0,p.life);oval(c,p.x,p.y,3,3,p.color);}c.globalAlpha=1;
+};
+</script>
+<div id="food-reward" role="status" aria-live="polite"></div></body></html>
